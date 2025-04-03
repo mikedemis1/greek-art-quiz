@@ -2,12 +2,31 @@ import axios from 'axios';
 import * as cron from 'node-cron';
 import * as fs from 'fs';
 
-
 // URL of the data source (Replace with actual API)
-const DATA_SOURCE_URL = 'C:\Users\miked\Desktop\task1\greek-art-quiz\procced json file';
+const DATA_SOURCE_URL = 'C:\\Users\\miked\\Desktop\\task1\\greek-art-quiz\\procced json file';
 
 // File to store the last fetched data (For validation & persistence)
 const DATA_STORAGE_FILE = 'data.json';
+
+// ✅ Function to validate the structure of fetched data
+function validateData(data: any): boolean {
+  if (!Array.isArray(data)) {
+    console.error("Data is not an array.");
+    return false;
+  }
+
+  for (const item of data) {
+    if (
+      typeof item !== 'object' ||
+      !item.name || !item.period || !item.type
+    ) {
+      console.error("Invalid item structure:", item);
+      return false;
+    }
+  }
+
+  return true;
+}
 
 // Function to fetch updated data
 async function fetchData(): Promise<void> {
@@ -19,6 +38,12 @@ async function fetchData(): Promise<void> {
 
     if (response.status === 200) {
       const newData = response.data;
+
+      // ✅ Validate the fetched data
+      if (!validateData(newData)) {
+        console.error("Fetched data failed validation.");
+        return;
+      }
 
       // Validate & integrate the fetched data
       const isUpdated = await integrateData(newData);
